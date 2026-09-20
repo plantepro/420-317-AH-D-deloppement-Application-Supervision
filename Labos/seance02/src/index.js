@@ -20,7 +20,7 @@ const humSensor = {
     max : 80,
     unit : "%",
     threshold : 50,
-    direction : "bellow",
+    direction : "below",
 }
 
 const temperature = new Sensor(tempSensor.id, { min: tempSensor.min, max: tempSensor.max });
@@ -65,13 +65,21 @@ monitor.on("alert", alert);
 console.log("Deux capteurs demarres. Ctrl+C pour arreter.\n");
 
 process.on("SIGINT", () => {
+
   temperature.stop();
   humidity.stop();
 
+  //console.log("history length =", history.length);
+  //console.log(history);
   console.log("\n--- Statistiques de la session ---");
+
+
   for (const sensor of [temperature, humidity]) {
     const measures = history.filter((measure) => measure.sensor === sensor.id);
-    console.log(sensor.id, computeStats(measures));
+    console.log(sensor.id,computeStats(measures));
   }
-  process.exit(0);
+
+  console.log("Arret des capteurs. Bye !");
+
+  process.exitCode = 0;
 });
