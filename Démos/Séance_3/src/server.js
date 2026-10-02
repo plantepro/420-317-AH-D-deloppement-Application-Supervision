@@ -5,7 +5,7 @@ import { readFile } from "fs/promises";
 
 const measures = [];
 const sensor = new Sensor("temp-b127", {min: 18, max: 32});
-sensor.on("measure", (measure) => measures.push(measure));
+sensor.on("measure", (measure) => measures.push(measure)); //.on() 监听某个事件的发生，事件发生时执行回调函数
 sensor.start();
 
 
