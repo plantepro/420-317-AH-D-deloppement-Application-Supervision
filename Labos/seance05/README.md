@@ -26,8 +26,10 @@ Même API qu'à la séance 3, réécrite en Express et découpée en trois couch
 ## Structure
 
 ```
-src/app.js          configuration Express, ordre des middlewares
-src/index.js        démarrage du capteur et du serveur
+index.js 负责把服务器开起来， 就像是说“店开门了，营业"
+app.js 负责这个服务器里面怎么配置 就像是说”店里有什么柜台，规则，服务流程“
+src/app.js          configuration Express, ordre des middlewares //app.js 负责配置Express
+src/index.js        démarrage du capteur et du serveur //index.js负责启动服务器
 src/routes/         quelles URL existent
 src/controllers/    lire req, choisir le code, répondre
 src/services/       la logique — ni req ni res ici
