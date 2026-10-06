@@ -5,7 +5,8 @@ import Sensor from "../models/sensor.model.js";
 // capteur pour commencer a ecouter le bon sujet MQTT (seance 14).
 
 export async function create({ id, name, unit, min, max, threshold, direction }) {
-  // _id vient du client : c'est le nom du sujet MQTT auquel on s'abonnera.
+  // _id vient du client : c'est le nom du sujet MQTT auquel on s'abonnera. id由客户端提供：它是我们将要订阅的MQTT主题的名称。
+  // active est pose ICI, avant tout etalement de donnees recues : le service reste la seule source de verite sur ce champ. active在这里设置，在接收到任何数据之前：服务仍然是该字段的唯一真实来源。
   return Sensor.create({ _id: id, name, unit, min, max, threshold, direction });
 }
 
