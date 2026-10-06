@@ -9,10 +9,10 @@
     "test": "node src/tests/schema.test.js"
   },
   "dependencies": {
+    "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "express-validator": "^7.1.0",
-    "mongoose": "^8.5.0",
-    "dotenv": "^16.4.5"
+    "mongoose": "^8.24.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

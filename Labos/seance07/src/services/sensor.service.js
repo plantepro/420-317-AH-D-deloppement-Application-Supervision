@@ -1,4 +1,4 @@
-import Sensor from "../models/sensor.model.js";
+import Sensor from "../models/sensor.model.js"; //导入传感器模型
 
 // Cette couche ignore HTTP : ni req, ni res.
 // sensors garde le CRUD complet : c'est le tableau de bord qui cree un
