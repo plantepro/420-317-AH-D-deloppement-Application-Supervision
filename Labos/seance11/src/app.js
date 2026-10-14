@@ -1,5 +1,5 @@
 import express from "express";
-import helmet from "helmet";
+import helmet from "helmet"; //HElmet是Express的安全中间件，用于设置多种HTTP相应安全头
 import cors from "cors";
 import { logger } from "./middlewares/logger.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";

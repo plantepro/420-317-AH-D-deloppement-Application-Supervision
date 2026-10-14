@@ -17,8 +17,8 @@ router.get("/", controller.list);
 router.get("/:id", controller.getOne);
 
 // Creer et modifier (y compris activer/desactiver) : operator et admin.
-router.post("/", authorize("operator", "admin"), validateSensorCreate, controller.create);
-router.put("/:id", authorize("operator", "admin"), validateSensorUpdate, controller.replace);
+router.post("/", authorize("operator", "admin"), validateSensorCreate, controller.create); //创建传感器 权限要求authorize operator或admin
+router.put("/:id", authorize("operator", "admin"), validateSensorUpdate, controller.replace); //修改传感器 权限要求authorize operator或admin
 
 // Supprimer : admin seulement.
 router.delete("/:id", authorize("admin"), controller.remove);

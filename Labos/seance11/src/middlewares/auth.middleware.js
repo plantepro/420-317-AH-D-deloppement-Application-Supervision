@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 export function protect(req, res, next) {
   const header = req.headers.authorization;
 
-  if (!header?.startsWith("Bearer ")) {
+  if (!header?.startsWith("Bearer ")) { //header?表示可选链运算符（Optional Chaining）排除null或undefined
     return res.status(401).json({ error: "Jeton absent" });
   }
 
@@ -20,7 +20,9 @@ export function protect(req, res, next) {
 
 // Autorisation : as-tu le droit ? Identifie mais pas autorise => 403.
 // Toujours placee APRES protect, car elle lit req.user.
-export function authorize(...roles) {
+//authorize() 检查角色权限, 如果 req.user.role 是 "reader"，检查结果就是 false，服务器返回 403。
+// 如果角色是 "operator" 或 "admin"，检查结果就是 true，调用 next() 进入下一个中间件。
+export function authorize(...roles) { //可接收多个角色
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ error: "Acces refuse" });

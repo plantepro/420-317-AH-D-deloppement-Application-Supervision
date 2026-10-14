@@ -132,11 +132,13 @@ await test("authorize passe avant la validation : reader + corps invalide = 403"
 });
 
 console.log("\nDurcissement");
-
-await test("helmet : en-tetes de securite presents, X-Powered-By retire", async () => {
+//使用Helmet要记得 Une défense en profondeur — 纵深防御，不依赖某一个安全措施，而是让多层保护相互补充
+await test("helmet : en-tetes de securite presents, X-Powered-By retire", async () => { //X-Powered-By（移除）不公开声明服务器使用 Express
   const r = await appeler("GET", "/api/sensors");
-  assert.strictEqual(r.headers.get("x-content-type-options"), "nosniff");
-  assert.ok(r.headers.get("content-security-policy"));
+  assert.strictEqual(r.headers.get("x-content-type-options"), "nosniff"); //避免浏览器自行猜测内容类型并错误执行内容
+  assert.ok(r.headers.get("content-security-policy")); //Content-Security-Policy: default-src 'self'; script-src 'self'; script-src-attr 'none'; img-src 'self' data:;
+  //'self'：只允许来自当前 Origin 的资源。script-src 'self'：只允许从当前 Origin 加载脚本。 script-src-attr 'none'：禁止内联事件处理器属性，例如 onclick="..."。
+  //CSP 可以限制浏览器从哪里加载脚本、样式、图片等资源，降低部分 XSS（跨站脚本攻击）的影响。
   assert.strictEqual(r.headers.get("x-powered-by"), null);
 });
 
