@@ -400,7 +400,8 @@ function logout(text = "") {
   showDashboard(false);
 }
 
-onSessionExpired(() => logout("Session expiree, reconnectez-vous"));
+//当登录会话失效时，通知 Dashboard 执行 logout()，并显示“会话已过期，请重新登录”。真正触发它的逻辑在 connections.js 已有的 api() 函数中：sessionExpiredHandler();
+onSessionExpired(() => logout("Session expiree, reconnectez-vous")); //清除本地 token、断开实时连接，并让用户重新登录。
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -409,9 +410,9 @@ loginForm.addEventListener("submit", async (event) => {
     const response = await login(                  // connections.js, TODO 1
       document.querySelector("#email").value,
       document.querySelector("#password").value,
-    );
-    saveToken(response.token);
-    start();
+    ); //等待登录请求完成，取得服务器返回的 response。
+    saveToken(response.token); //从服务器返回的response.token 取出 JWT，保存到浏览器的 sessionStorage。此函数在connections.js里面定义
+    start(); //开始加载 Dashboard，并建立实时连接等，connections.js 里的 api() 会自动给需要身份验证的请求添加：headers.Authorization = `Bearer ${token}`;
   } catch (e) {
     loginError.textContent = e.message;
   }
