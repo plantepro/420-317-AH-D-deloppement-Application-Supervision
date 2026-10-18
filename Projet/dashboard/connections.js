@@ -54,6 +54,8 @@ export function onSessionExpired(handler) { //注册会话过期时的处理逻�
 
 //向服务器发送 HTTP 请求，自动携带 JWT，并在服务器返回 401 时处理会话失效。
 //处理 1. 请求体使用什么格式；2.请求是否携带身份认证信息。
+const API_BASE = "http://localhost:3000";
+
 async function api(path, { method = "GET", body } = {}) { //申明异步，请求路径，解构函数2 并为method设置默认值“GET”
   const token = getToken();//读取token
   const headers = {}; //准备请求头

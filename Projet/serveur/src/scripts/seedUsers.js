@@ -1,3 +1,8 @@
+//ADDED: DUMMY DNS config because seedUsers.js is a seperate script to connect the database
+
+import dns from "dns";
+dns.setServers(["1.1.1.1"]);
+
 import "dotenv/config";
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
