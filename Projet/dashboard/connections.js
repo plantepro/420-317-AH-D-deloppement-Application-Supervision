@@ -172,7 +172,21 @@ export async function loadSensors() {
  * section sur les filtres. Le serveur plafonne la limite a 100.
  */
 export async function loadMeasures(sensorId, { min, max, limit } = {}) {
-  throw new Error("TODO 3 : loadMeasures n'est pas encore ecrite (connections.js)");
+  // new Error("TODO 3 : loadMeasures n'est pas encore ecrite (connections.js)");
+  const params = {
+    sensor: sensorId,
+    limit: limit
+  };
+  if (min!==undefined){
+    params.min = min
+  }
+  if (max!==undefined){
+    params.max = max
+  }
+  const query = new URLSearchParams(params);
+  const response = await api("/api/measures" + "?"+ query.toString())
+
+  return response.data
 }
 
 /**

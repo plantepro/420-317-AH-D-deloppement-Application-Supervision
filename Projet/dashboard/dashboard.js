@@ -225,24 +225,28 @@ function removeCard(id) {
  * Appelee au chargement, quand un filtre change, et apres chaque mesure recue.
  * Le numero de requete ecarte une reponse lente arrivee apres une plus recente.
  */
-async function refreshCard(card) {
+async function refreshCard(card) { //
   const requestNumber = ++card.requestNumber;
   const id = card.sensor._id;
   try {
-    const [measures, stats] = await Promise.all([
+    const [measures, stats] = await Promise.all([ //Promise.all() wait for the completion of the two async reqs, then receive the result through Array Destructuring：const [measures, stats] = ...
+      
       // connections.js, TODO 3 et TODO 4
+      // requesting two types of donnes ensemble: 1. loadMeasures() 2. LoadStatistcs(id)
+      // measures 接收的是 loadMeasures() 返回的测量数组，stats 接收的是 loadStatistics() 返回的统计结果。
       loadMeasures(id, {
         min: readBound(card.minInput),
         max: readBound(card.maxInput),
         limit: MAX_POINTS,
-      }),
+      }), //min 和 max 来自用户在 Dashboard 中填写的输入框，因此这个调用还支持筛选测量值。
       loadStatistics(id),
     ]);
+
     if (requestNumber !== card.requestNumber || cards.get(id) !== card) return;
-    card.measures = measures;
+    card.measures = measures; //测量数组存进 card.measures，随后用于刷新表格；
     card.error.textContent = "";
     showTable(card);
-    showStatistics(card, stats);
+    showStatistics(card, stats); //统计结果则用于刷新统计区域。
   } catch (e) {
     if (requestNumber !== card.requestNumber || cards.get(id) !== card) return;
     card.error.textContent = e.message;
@@ -279,9 +283,13 @@ async function fillCard(card) {
   try {
     // connections.js, TODO 3 : la reponse est triee de la plus RECENTE a la plus ancienne,
     // le graphique se lit de l'ancienne a la recente.
-    const measures = await loadMeasures(id, { limit: MAX_POINTS });
+    const measures = await loadMeasures(id, { limit: MAX_POINTS }); //ici it only passed limit, which means it requires the measures with a designated number,it doesn't set the filter conditions for min & max
     if (cards.get(id) !== card) return;
     for (const measure of [...measures].reverse()) addPoint(card, measure);
+    //measures 是刚刚收到的数组。
+    // [...measures].reverse() 创建一个副本，再将顺序反转。
+    // addPoint(card, measure) 把每条测量记录添加到图表中。
+    // 为什么反转？因为 API 返回的是最新记录在前，而图表需要按照从旧到新的顺序显示
 
     // L'etat d'alerte n'est pas stocke : on le deduit de la derniere valeur.
     if (card.lastValue !== null) showState(card, isExceeded(card.sensor, card.lastValue));
