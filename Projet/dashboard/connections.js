@@ -246,7 +246,9 @@ export async function createSensor(sensor) {
  * connexion sans jeton : transmettez-le dans l'option "auth", sous le nom "token".
  */
 export function openSocket(token) {
-  throw new Error("TODO 6 : openSocket n'est pas encore ecrite (connections.js)");
+  //throw new Error("TODO 6 : openSocket n'est pas encore ecrite (connections.js)");
+  const socket = io({ auth: { token } }) //Créer une connexion cliente Socket.IO et envoyer le jeton (token) de l’utilisateur au serveur à des fins d’authentification.
+  return socket
 }
 
 /**
@@ -270,7 +272,16 @@ export function openSocket(token) {
  * parametre; "refused" recoit le TEXTE de l'erreur (error.message), pas l'objet Error.
  */
 export function bindConnection(socket, handlers) {
-  throw new Error("TODO 7 : bindConnection n'est pas encore ecrite (connections.js)");
+  //throw new Error("TODO 7 : bindConnection n'est pas encore ecrite (connections.js)");
+  socket.on("connect", () => {
+   handlers.connected()
+  });
+    socket.on("disconnect", () => {
+   handlers.disconnected()
+  });
+  socket.on("connect_error", (error) => {
+   handlers.refused(error.message)
+  });
 }
 
 /**
