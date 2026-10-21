@@ -8,8 +8,15 @@ import { loginLimiter } from "./middlewares/rateLimit.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
 import measureRoutes from "./routes/measure.routes.js";
 import sensorRoutes from "./routes/sensor.routes.js";
+//ADDED: The following two lines were added for solving the static resourcing loading issue
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
+//ADDED: The following 3 lines were added for solving the static resourcing loading conflictions
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const dashboardPath = path.resolve(__dirname, "../../dashboard");
 
 // L'ordre de declaration est l'ordre d'execution.
 app.use(logger);
@@ -28,9 +35,13 @@ if (process.env.CORS_ORIGIN) {
 
 // Corps limite a 10 ko : au-dela, 413 avant meme d'analyser le JSON.
 app.use(express.json({ limit: "10kb" }));
-app.use(express.static("src/public"));
+// app.use(express.static("src/public"));
 // Chart.js est servi depuis node_modules : la politique de helmet refuse les CDN.
-app.use("/vendor", express.static("node_modules/chart.js/dist"));
+// app.use("/vendor", express.static("node_modules/chart.js/dist"));
+
+//ADDED: The above 2 lines were commented out and replaced by the following 2 lines before the dashboard were implemented
+app.use(express.static(dashboardPath));
+app.use("/vendor", express.static(path.resolve(__dirname, "../node_modules/chart.js/dist")));
 
 // Le limiteur est monte sur /login seulement, et AVANT le routeur d'auth.
 app.use("/api/auth/login", loginLimiter);

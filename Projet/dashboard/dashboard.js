@@ -225,24 +225,28 @@ function removeCard(id) {
  * Appelee au chargement, quand un filtre change, et apres chaque mesure recue.
  * Le numero de requete ecarte une reponse lente arrivee apres une plus recente.
  */
-async function refreshCard(card) {
+async function refreshCard(card) { //
   const requestNumber = ++card.requestNumber;
   const id = card.sensor._id;
   try {
-    const [measures, stats] = await Promise.all([
+    const [measures, stats] = await Promise.all([ //Promise.all() wait for the completion of the two async reqs, then receive the result through Array Destructuring：const [measures, stats] = ...
+      
       // connections.js, TODO 3 et TODO 4
+      // requesting two types of donnes ensemble: 1. loadMeasures() 2. LoadStatistcs(id)
+      // measures 接收的是 loadMeasures() 返回的测量数组，stats 接收的是 loadStatistics() 返回的统计结果。
       loadMeasures(id, {
         min: readBound(card.minInput),
         max: readBound(card.maxInput),
         limit: MAX_POINTS,
-      }),
+      }), //min 和 max 来自用户在 Dashboard 中填写的输入框，因此这个调用还支持筛选测量值。
       loadStatistics(id),
     ]);
+
     if (requestNumber !== card.requestNumber || cards.get(id) !== card) return;
-    card.measures = measures;
+    card.measures = measures; //测量数组存进 card.measures，随后用于刷新表格；
     card.error.textContent = "";
     showTable(card);
-    showStatistics(card, stats);
+    showStatistics(card, stats); //统计结果则用于刷新统计区域。
   } catch (e) {
     if (requestNumber !== card.requestNumber || cards.get(id) !== card) return;
     card.error.textContent = e.message;
@@ -279,9 +283,13 @@ async function fillCard(card) {
   try {
     // connections.js, TODO 3 : la reponse est triee de la plus RECENTE a la plus ancienne,
     // le graphique se lit de l'ancienne a la recente.
-    const measures = await loadMeasures(id, { limit: MAX_POINTS });
+    const measures = await loadMeasures(id, { limit: MAX_POINTS }); //ici it only passed limit, which means it requires the measures with a designated number,it doesn't set the filter conditions for min & max
     if (cards.get(id) !== card) return;
     for (const measure of [...measures].reverse()) addPoint(card, measure);
+    //measures 是刚刚收到的数组。
+    // [...measures].reverse() 创建一个副本，再将顺序反转。
+    // addPoint(card, measure) 把每条测量记录添加到图表中。
+    // 为什么反转？因为 API 返回的是最新记录在前，而图表需要按照从旧到新的顺序显示
 
     // L'etat d'alerte n'est pas stocke : on le deduit de la derniere valeur.
     if (card.lastValue !== null) showState(card, isExceeded(card.sensor, card.lastValue));
@@ -309,9 +317,12 @@ async function reloadAll() {
 }
 
 // ------------------------------------------------- Ce que fait le socket
-
+//Handler	什么时候调用	页面预期表现
+// connected()	Socket.IO 连接成功	显示 En direct，调用 reloadAll()
+// disconnected()	连接断开	显示 Reconnexion...
+// refused(text)	连接尝试失败	显示 Reconnexion...；如果 token 无效，则退出登录
 const connectionHandlers = {
-  connected() {
+  connected() {//这里定义了一个普通的 JavaScript 对象，connected() 是对象中的一个方法。它的内容规定了：当连接成功事件被处理时，将状态改成 En direct，然后调用 reloadAll()。
     statusLight.textContent = "En direct";
     statusLight.className = "ok";
     // Apres une coupure, les mesures manquees ne reviennent pas : on recharge tout.
@@ -377,9 +388,16 @@ function start() {
 
   statusLight.textContent = "Connexion...";
   statusLight.className = "";
-  try {
-    socket = openSocket(token);                      // connections.js, TODO 6
+  try {//在这里注意理解异步事件驱动概念和事件驱动编程概念（programmation événementielle）
+    socket = openSocket(token);     //负责建立连接，但调用它不代表连接已经成功。                 // connections.js, TODO 6
+     // bindConnection(...) 负责注册监听器，socket = openSocket("invalid-test-token");        但注册监听器不代表监听器立即执行。
+     // connections.js, TODO 6， 调用 openSocket(token)，请求建立 Socket.IO 连接。
     bindConnection(socket, connectionHandlers);      // TODO 7
+    //注意：bindConnection() 叫做异步事件驱动，不是直接调用 connectionHandlers.connected()，而是把这个函数注册起来，等连接事件发生时再执行。
+    // 为什么要先注册监听器？
+    // 假设网络需要 200 毫秒才能完成连接。
+    // 如果代码只创建 Socket，却没有监听连接事件，前端就不知道什么时候应该把状态更新为 En direct，也不知道什么时候开始执行 reloadAll()。
+    // 通过事件监听器，程序可以在连接成功时自动执行后续工作。这是一种典型的事件驱动编程（programmation événementielle）。
     bindMeasures(socket, measureHandlers);           // TODO 8
     bindSensors(socket, sensorHandlers);             // TODO 9
   } catch (e) {
@@ -400,7 +418,8 @@ function logout(text = "") {
   showDashboard(false);
 }
 
-onSessionExpired(() => logout("Session expiree, reconnectez-vous"));
+//当登录会话失效时，通知 Dashboard 执行 logout()，并显示“会话已过期，请重新登录”。真正触发它的逻辑在 connections.js 已有的 api() 函数中：sessionExpiredHandler();
+onSessionExpired(() => logout("Session expiree, reconnectez-vous")); //清除本地 token、断开实时连接，并让用户重新登录。
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -409,9 +428,15 @@ loginForm.addEventListener("submit", async (event) => {
     const response = await login(                  // connections.js, TODO 1
       document.querySelector("#email").value,
       document.querySelector("#password").value,
-    );
-    saveToken(response.token);
-    start();
+    ); //1. 通过 REST API 发送账号密码 等待登录请求完成，取得服务器返回的 response。
+    saveToken(response.token); //2.从服务器返回的response.token 取出 JWT，保存到浏览器的 sessionStorage。此函数在connections.js里面定义
+    start(); //3.开始加载 Dashboard，start() 先读取 Token 和角色，再调用 openSocket(token) 建立 Socket.IO 连接，随后注册连接、测量值和传感器事件处理器。connections.js 里的 api() 会自动给需要身份验证的请求添加：headers.Authorization = `Bearer ${token}`;
+  //start（）建立连接 并在这里注册事件处理函数，（370-388行）
+  // Socket.IO 连接成功后，Socket.IO 会自动调用这个函数。异步事件驱动
+  //这些代码依次执行。Socket.IO 的连接则可能需要一些时间才能完成。
+  //在连接等待期间，JavaScript 可以继续执行后面的代码，注册测量值和传感器事件监听器。等连接成功后，Socket.IO 才触发连接事件，进而执行 connected()。
+  //因此，reloadAll() 不是由 start() 直接调用的，而是通过“连接事件 → 事件处理器 → reloadAll()”这条调用链间接执行的。
+  // 这个事件回调再调用 reloadAll()。
   } catch (e) {
     loginError.textContent = e.message;
   }

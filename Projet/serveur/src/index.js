@@ -1,4 +1,12 @@
-import "dotenv/config";
+import dns from "dns";
+
+dns.setServers(["1.1.1.1"]);
+
+import "dotenv/config"; //在index.js里import 'dotenv/config'; 加载.env 到process.env. 就可以在process.env.MONGO_URI里取得.env里的MONGO_URI的值
+//process.env.MONGO_URI就能拿到.env里面的MONGO_URI=...
+//process.env.PORT就能拿到.env里面的PORT=...
+
+
 import http from "http";
 import app from "./app.js";
 import { connectDatabase } from "./config/db.js";
