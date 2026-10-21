@@ -309,9 +309,12 @@ async function reloadAll() {
 }
 
 // ------------------------------------------------- Ce que fait le socket
-
+//Handler	什么时候调用	页面预期表现
+// connected()	Socket.IO 连接成功	显示 En direct，调用 reloadAll()
+// disconnected()	连接断开	显示 Reconnexion...
+// refused(text)	连接尝试失败	显示 Reconnexion...；如果 token 无效，则退出登录
 const connectionHandlers = {
-  connected() {
+  connected() {//这里定义了一个普通的 JavaScript 对象，connected() 是对象中的一个方法。它的内容规定了：当连接成功事件被处理时，将状态改成 En direct，然后调用 reloadAll()。
     statusLight.textContent = "En direct";
     statusLight.className = "ok";
     // Apres une coupure, les mesures manquees ne reviennent pas : on recharge tout.
@@ -377,9 +380,16 @@ function start() {
 
   statusLight.textContent = "Connexion...";
   statusLight.className = "";
-  try {
-    socket = openSocket(token);                      // connections.js, TODO 6
+  try {//在这里注意理解异步事件驱动概念和事件驱动编程概念（programmation événementielle）
+    socket = openSocket(token);     //负责建立连接，但调用它不代表连接已经成功。                 // connections.js, TODO 6
+     // bindConnection(...) 负责注册监听器，socket = openSocket("invalid-test-token");        但注册监听器不代表监听器立即执行。
+     // connections.js, TODO 6， 调用 openSocket(token)，请求建立 Socket.IO 连接。
     bindConnection(socket, connectionHandlers);      // TODO 7
+    //注意：bindConnection() 叫做异步事件驱动，不是直接调用 connectionHandlers.connected()，而是把这个函数注册起来，等连接事件发生时再执行。
+    // 为什么要先注册监听器？
+    // 假设网络需要 200 毫秒才能完成连接。
+    // 如果代码只创建 Socket，却没有监听连接事件，前端就不知道什么时候应该把状态更新为 En direct，也不知道什么时候开始执行 reloadAll()。
+    // 通过事件监听器，程序可以在连接成功时自动执行后续工作。这是一种典型的事件驱动编程（programmation événementielle）。
     bindMeasures(socket, measureHandlers);           // TODO 8
     bindSensors(socket, sensorHandlers);             // TODO 9
   } catch (e) {
@@ -410,9 +420,15 @@ loginForm.addEventListener("submit", async (event) => {
     const response = await login(                  // connections.js, TODO 1
       document.querySelector("#email").value,
       document.querySelector("#password").value,
-    ); //等待登录请求完成，取得服务器返回的 response。
-    saveToken(response.token); //从服务器返回的response.token 取出 JWT，保存到浏览器的 sessionStorage。此函数在connections.js里面定义
-    start(); //开始加载 Dashboard，并建立实时连接等，connections.js 里的 api() 会自动给需要身份验证的请求添加：headers.Authorization = `Bearer ${token}`;
+    ); //1. 通过 REST API 发送账号密码 等待登录请求完成，取得服务器返回的 response。
+    saveToken(response.token); //2.从服务器返回的response.token 取出 JWT，保存到浏览器的 sessionStorage。此函数在connections.js里面定义
+    start(); //3.开始加载 Dashboard，start() 先读取 Token 和角色，再调用 openSocket(token) 建立 Socket.IO 连接，随后注册连接、测量值和传感器事件处理器。connections.js 里的 api() 会自动给需要身份验证的请求添加：headers.Authorization = `Bearer ${token}`;
+  //start（）建立连接 并在这里注册事件处理函数，（370-388行）
+  // Socket.IO 连接成功后，Socket.IO 会自动调用这个函数。异步事件驱动
+  //这些代码依次执行。Socket.IO 的连接则可能需要一些时间才能完成。
+  //在连接等待期间，JavaScript 可以继续执行后面的代码，注册测量值和传感器事件监听器。等连接成功后，Socket.IO 才触发连接事件，进而执行 connected()。
+  //因此，reloadAll() 不是由 start() 直接调用的，而是通过“连接事件 → 事件处理器 → reloadAll()”这条调用链间接执行的。
+  // 这个事件回调再调用 reloadAll()。
   } catch (e) {
     loginError.textContent = e.message;
   }
