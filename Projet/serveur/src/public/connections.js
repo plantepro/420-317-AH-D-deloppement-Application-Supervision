@@ -292,8 +292,18 @@ export function bindConnection(socket, handlers) {
  * TODO 3, c'est un objet. Ne les melangez pas : dashboard.js sait deja lequel il recoit.
  */
 export function bindMeasures(socket, handlers) {
-  throw new Error("TODO 8 : bindMeasures n'est pas encore ecrite (connections.js)");
+  //throw new Error("TODO 8 : bindMeasures n'est pas encore ecrite (connections.js)");
+  socket.on("measure",(measure) => {
+    handlers.measure(measure)
+  });
+    socket.on("alert",(alert) => {
+    handlers.alert(alert)
+  });
+    socket.on("recovery",(recovery) => {
+    handlers.recovery(recovery)
+  });
 }
+
 
 /**
  * TODO 9 : ecouter les changements de capteurs.
