@@ -205,7 +205,12 @@ export async function loadMeasures(sensorId, { min, max, limit } = {}) {
  * de TOUTES les mesures, tous capteurs confondus.
  */
 export async function loadStatistics(sensorId) {
-  throw new Error("TODO 4 : loadStatistics n'est pas encore ecrite (connections.js)");
+  //throw new Error("TODO 4 : loadStatistics n'est pas encore ecrite (connections.js)");
+  const params = new URLSearchParams({
+    sensor: sensorId,
+  });
+
+  return api(`/api/measures/stats?${params}`);
 }
 
 /**
@@ -224,7 +229,11 @@ export async function loadStatistics(sensorId) {
  * tous les navigateurs par un evenement (voir TODO 9), le votre compris.
  */
 export async function createSensor(sensor) {
-  throw new Error("TODO 5 : createSensor n'est pas encore ecrite (connections.js)");
+  //throw new Error("TODO 5 : createSensor n'est pas encore ecrite (connections.js)");
+  return api("/api/sensors",{
+    method:"POST",
+    body:sensor
+  });
 }
 
 // ---------------------------------------------------------------------------

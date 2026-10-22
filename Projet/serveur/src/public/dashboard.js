@@ -264,19 +264,19 @@ function scheduleRefresh(card) {
 
 function addPoint(card, measure) {
   const { labels, datasets } = card.chart.data;
-  labels.push(new Date(measure.createdAt).toLocaleTimeString());
-  datasets[0].data.push(measure.value);
+  labels.push(new Date(measure.createdAt).toLocaleTimeString()); //添加时间标签
+  datasets[0].data.push(measure.value); //2. 添加测量值
 
   // Fenetre glissante : sans cette limite, la page ralentit puis devient illisible.
-  if (labels.length > MAX_POINTS) {
-    labels.shift();
-    datasets[0].data.shift();
-  }
-  card.chart.update();
+  if (labels.length > MAX_POINTS) { //是否超过限制点数
+    labels.shift(); //删除最早的时间标签
+    datasets[0].data.shift(); //删除与之对应的最早测量值。
+  } //
+  card.chart.update(); //通知 Chart.js 更新图表，把数据或配置的变化显示到页面上。
 
   card.lastValue = measure.value;
   card.value.textContent = `${measure.value.toFixed(1)} ${card.sensor.unit}`;
-}
+} //更新最新测量值的显示
 
 async function fillCard(card) {
   const id = card.sensor._id;
