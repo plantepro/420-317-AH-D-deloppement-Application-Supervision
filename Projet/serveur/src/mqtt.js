@@ -35,9 +35,12 @@ let client = null;
  *
  * Cette fonction est la SEULE a connaitre la forme des sujets : toutes les autres
  * (abonnement, desabonnement, lecture d'un message) s'en servent.
- */
+  * 这个函数是唯一一个需要知道 Topic 格式的函数：
+  * 所有其他函数（订阅、取消订阅、读取消息）都要使用它。
+  */
 export function topicOf(sensorId) {
-  throw new Error("TODO 1 : topicOf n'est pas encore ecrite");
+  //throw new Error("TODO 1 : topicOf n'est pas encore ecrite");
+  return `supervision/${sensorId}`;
 }
 
 /**
@@ -68,10 +71,41 @@ export function topicOf(sensorId) {
  * Indice : JSON.parse leve lui-meme une erreur sur un JSON invalide.
  * Verification : npm run test:mqtt (18 tests).
  */
-export function parseMeasure(topic, payload) {
-  throw new Error("TODO 2 : parseMeasure n'est pas encore ecrite");
-}
+export function parseMeasure(topic, payload) {//payload originally is a buffer with JSON
+  
+    if (!topic.startsWith("supervision/")) {
+      throw new Error("le sujet ne commence pas par supervision/");
+    } 
+    
+    //throw new Error("TODO 2 : parseMeasure n'est pas encore ecrite");
+    const piece = topic.toString().split("/");
+    if (length(piece > 1)) {
+      throw new Error("L'identifiant contient un autre '/'");
+    }
 
+    const sensorID = piece[1];
+    if (sensorID == null) 
+      {throw new Error("l'identifiant est vide");}
+    if (payload == null)
+      {throw new Error("value est absente");}
+    
+    let data;
+    try {
+      data = JSON.parse(payload.toString());
+    } catch (error) {
+        throw new Error("Le contenu n'est pas du JSON valide");
+    }
+    if (data === null || typeof data !== "object" || Array.isArray(data)){
+      throw new Error("le JSON n'est pas un objet");
+    }
+    if (typeof data.value !== "number") {
+          throw new Error("value n'est pas un nombre fini");}
+    return {
+      sensor: sensorID,
+      value: data.value
+    }
+    }
+  
 /**
  * TODO 3 : se connecter au courtier et ecouter.
  *
