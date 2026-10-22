@@ -326,5 +326,14 @@ export function bindMeasures(socket, handlers) {
  *   supprime              |                                                      |
  */
 export function bindSensors(socket, handlers) {
-  throw new Error("TODO 9 : bindSensors n'est pas encore ecrite (connections.js)");
+  //throw new Error("TODO 9 : bindSensors n'est pas encore ecrite (connections.js)");
+  socket.on("sensor:created",(sensor) => {
+    handlers.created(sensor)
+  });
+  socket.on("sensor:updated",(sensor) => {
+    handlers.updated(sensor)
+  });
+  socket.on("sensor:deleted",(payload) => {
+    handlers.deleted(payload)
+  });
 }
