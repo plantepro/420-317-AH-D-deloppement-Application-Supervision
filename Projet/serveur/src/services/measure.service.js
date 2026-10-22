@@ -41,19 +41,18 @@ export async function getLatest() {
 
 export async function getStats(query = {}) {
   // Memes filtres que la liste : ?sensor= donne les statistiques d'UN capteur.
-  const [stats] = await Measure.aggregate([
-    { $match: buildFilter(query) },
-    {
-      $group: {
+  const [stats] = await Measure.aggregate([ //对数据库里的测量记录进行mongoDB聚合操作
+    { $match: buildFilter(query) }, 
+      {$group: {
         _id: null,
         count: { $sum: 1 },
         min: { $min: "$value" },
         max: { $max: "$value" },
         average: { $avg: "$value" },
-      },
-    },
-  ]);
-
+      }, 
+    },//统计结果
+  ]); 
+  //如果没有匹配到任何测量记录，聚合结果可能是空数组，stats 就会是 undefined。
   if (!stats) return { count: 0, min: null, max: null, average: null };
 
   return {
