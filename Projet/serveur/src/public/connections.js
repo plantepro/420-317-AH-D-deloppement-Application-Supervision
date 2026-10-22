@@ -229,7 +229,11 @@ export async function loadStatistics(sensorId) {
  * tous les navigateurs par un evenement (voir TODO 9), le votre compris.
  */
 export async function createSensor(sensor) {
-  throw new Error("TODO 5 : createSensor n'est pas encore ecrite (connections.js)");
+  //throw new Error("TODO 5 : createSensor n'est pas encore ecrite (connections.js)");
+  return api("/api/sensors",{
+    method:"POST",
+    body:sensor
+  });
 }
 
 // ---------------------------------------------------------------------------
