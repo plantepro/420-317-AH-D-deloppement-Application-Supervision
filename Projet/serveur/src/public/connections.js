@@ -54,7 +54,7 @@ export function onSessionExpired(handler) { //注册会话过期时的处理逻�
 
 //向服务器发送 HTTP 请求，自动携带 JWT，并在服务器返回 401 时处理会话失效。
 //处理 1. 请求体使用什么格式；2.请求是否携带身份认证信息。
-
+const API_BASE = "http://localhost:3000";
 
 async function api(path, { method = "GET", body } = {}) { //申明异步，请求路径，解构函数2 并为method设置默认值“GET”
   const token = getToken();//读取token
@@ -140,8 +140,7 @@ export async function login(email, password) {
  * Ne filtrez rien : dashboard.js garde lui-meme les capteurs actifs.
  */
 export async function loadSensors() {
-  //throw new Error("TODO 2 : loadSensors n'est pas encore ecrite (connections.js)");
-  return api("/api/sensors");
+  throw new Error("TODO 2 : loadSensors n'est pas encore ecrite (connections.js)");
 }
 
 /**
@@ -172,21 +171,7 @@ export async function loadSensors() {
  * section sur les filtres. Le serveur plafonne la limite a 100.
  */
 export async function loadMeasures(sensorId, { min, max, limit } = {}) {
-  // new Error("TODO 3 : loadMeasures n'est pas encore ecrite (connections.js)");
-  const params = {
-    sensor: sensorId,
-    limit: limit
-  };
-  if (min!==undefined){
-    params.min = min
-  }
-  if (max!==undefined){
-    params.max = max
-  }
-  const query = new URLSearchParams(params);
-  const response = await api("/api/measures" + "?"+ query.toString())
-
-  return response.data
+  throw new Error("TODO 3 : loadMeasures n'est pas encore ecrite (connections.js)");
 }
 
 /**
@@ -205,12 +190,7 @@ export async function loadMeasures(sensorId, { min, max, limit } = {}) {
  * de TOUTES les mesures, tous capteurs confondus.
  */
 export async function loadStatistics(sensorId) {
-  //throw new Error("TODO 4 : loadStatistics n'est pas encore ecrite (connections.js)");
-  const params = new URLSearchParams({
-    sensor: sensorId,
-  });
-
-  return api(`/api/measures/stats?${params}`);
+  throw new Error("TODO 4 : loadStatistics n'est pas encore ecrite (connections.js)");
 }
 
 /**
@@ -229,11 +209,7 @@ export async function loadStatistics(sensorId) {
  * tous les navigateurs par un evenement (voir TODO 9), le votre compris.
  */
 export async function createSensor(sensor) {
-  //throw new Error("TODO 5 : createSensor n'est pas encore ecrite (connections.js)");
-  return api("/api/sensors",{
-    method:"POST",
-    body:sensor
-  });
+  throw new Error("TODO 5 : createSensor n'est pas encore ecrite (connections.js)");
 }
 
 // ---------------------------------------------------------------------------
@@ -316,8 +292,18 @@ export function bindConnection(socket, handlers) {
  * TODO 3, c'est un objet. Ne les melangez pas : dashboard.js sait deja lequel il recoit.
  */
 export function bindMeasures(socket, handlers) {
-  throw new Error("TODO 8 : bindMeasures n'est pas encore ecrite (connections.js)");
+  //throw new Error("TODO 8 : bindMeasures n'est pas encore ecrite (connections.js)");
+  socket.on("measure",(measure) => {
+    handlers.measure(measure)
+  });
+    socket.on("alert",(alert) => {
+    handlers.alert(alert)
+  });
+    socket.on("recovery",(recovery) => {
+    handlers.recovery(recovery)
+  });
 }
+
 
 /**
  * TODO 9 : ecouter les changements de capteurs.
