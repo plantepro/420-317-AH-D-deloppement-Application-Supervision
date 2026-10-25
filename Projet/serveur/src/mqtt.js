@@ -79,12 +79,12 @@ export function parseMeasure(topic, payload) {//payload originally is a buffer w
     
     //throw new Error("TODO 2 : parseMeasure n'est pas encore ecrite");
     const piece = topic.toString().split("/");
-    if (length(piece > 1)) {
+    if (piece.length > 2) {
       throw new Error("L'identifiant contient un autre '/'");
     }
 
     const sensorID = piece[1];
-    if (sensorID == null) 
+    if (!sensorID || !sensorID.trim()) 
       {throw new Error("l'identifiant est vide");}
     if (payload == null)
       {throw new Error("value est absente");}
@@ -136,9 +136,67 @@ export function parseMeasure(topic, payload) {//payload originally is a buffer w
  *    sans destinataire.
  * 5. Evenement "error" (recoit une erreur) : journaliser avec console.error. Sans lui, une
  *    erreur de connexion peut arreter Node.
+ * 1. 从 .env 读取 MQTT 服务器地址和认证信息：
+ * 2. 2. 创建 MQTT 客户端
  */
 export function startMqtt() {
-  throw new Error("TODO 3 : startMqtt n'est pas encore ecrite");
+  //throw new Error("TODO 3 : startMqtt n'est pas encore ecrite");
+  const url = process.env.MQTT_URL;
+  const username = process.env.MQTT_USERNAME;
+  const password = process.env.MQTT_PASSWORD;
+
+  //afficher un message clair avec console.error et arreter le
+  // processus avec process.exit(1)
+  
+    if (url==null){
+      console.Error("MQTT_URL est absente du fichier .env")
+      process.exit(1)
+    }
+
+  //Creer le client avec mqtt.connect(url, { username, password }).
+  client = mqtt.connect(url, { username, password }) //mqtt.connect() 会立即返回客户端，不会等待连接成功。因此你需要通过 "connect" 事件知道什么时候真正连接成功。
+
+  // Evenement "connect" (sans parametre) : s'abonner au sujet de TOUT capteur present en base,
+  // actif ou non. sensorService.list() retourne une Promise d'un tableau de capteurs, chacun
+  // avec son identifiant dans "_id". Un capteur desactive continue d'enregistrer ses mesures.
+  // Cet evenement revient a chaque reconnexion : les abonnements sont donc refaits seuls.
+  client.on("connect",async() => {
+    // 获取数据库中的传感器
+    //所有传感器都要订阅，包括停用的传感器。
+    // MQTT 每次重新连接都会触发 "connect"，因此在这个事件中订阅，可以在重连后重新建立订阅。
+    // 遍历传感器
+    const sensors = await sensorService.list()
+    sensors.forEach(sensor => {
+      const topic = topicOf(sensor.id)
+      const qos = 0
+      // 订阅每个传感器的 topic
+      client.subscribe(topic, { qos }, (error) => {
+        if (error) {
+          console.log('subscribe error:', error)
+          return
+        }
+        console.log(`Subscribe to topic '${topic}'`)
+      })
+    });
+  })
+
+  client.on('message', async(topic, payload) => {
+//   a. lire la mesure avec parseMeasure (TODO 2) ;
+//  *      b. verifier que le capteur existe en base : sensorService.getById(id) retourne une
+//  *         Promise du capteur, ou de null s'il n'existe pas. S'il n'existe pas : console.warn,
+//  *         puis ignorer le message ;
+//  *      c. appeler ingest({ sensor, value }) : c'est tout. ingest enregistre, compare au seuil
+//  *         et diffuse. Attendez-la avec await.
+    const {sensor:id, value} = parseMeasure(topic, payload)
+    const response = await sensorService.getById(id) 
+    if (!response) {
+      console.warn("Capteur inconnu : ${id}")}
+    else ingest({sensor:id,value});
+  })
+
+  client.on("error", (error)=>{
+    console.error(error);
+  })
 }
 
 /**
@@ -152,7 +210,18 @@ export function startMqtt() {
  * console.error, jamais lancee. Appelee par le LIEN MQTT 2 de sensor.controller.js.
  */
 export function subscribeSensor(sensorId) {
-  throw new Error("TODO 4 : subscribeSensor n'est pas encore ecrite");
+  if (!client) {
+        return;
+    }
+    const topic = topicOf(sensorId);
+  //throw new Error("TODO 4 : subscribeSensor n'est pas encore ecrite");
+   client.subscribe(topic, (error) => {
+        if (error) {
+          console.log('subscribe error:', error)
+          return
+        }
+        console.log(`Subscribe to topic '${topic}'`)
+      })
 }
 
 /**
@@ -165,5 +234,16 @@ export function subscribeSensor(sensorId) {
  * journalisee et non lancee. Appelee par le LIEN MQTT 3 de sensor.controller.js.
  */
 export function unsubscribeSensor(sensorId) {
-  throw new Error("TODO 5 : unsubscribeSensor n'est pas encore ecrite");
+  //throw new Error("TODO 5 : unsubscribeSensor n'est pas encore ecrite");
+     if (!client) {
+        return;
+    }
+    const topic = topicOf(sensorId)
+   client.unsubscribe(topic, { qos }, (error) => {
+        if (error) {
+          console.log('subscribe error:', error)
+          return
+        }
+        console.log(`Subscribe to topic '${topic}'`)
+      })
 }

@@ -13,6 +13,7 @@ import { connectDatabase } from "./config/db.js";
 import { Sensor } from "./sensor.js";
 import { initRealtime } from "./realtime.js";
 import { ingest } from "./services/acquisition.service.js";
+import { startMqtt } from "./mqtt.js";
 
 if (!process.env.JWT_SECRET) {
   console.error("JWT_SECRET absent : verifiez votre fichier .env");
@@ -43,6 +44,7 @@ if (process.env.SIMULATE_SENSOR === "true") {
   sensor.start();
 }
 
+startMqtt();
 const port = process.env.PORT || 3000;
 server.listen(port, () => console.log(`http://localhost:${port}`));
 

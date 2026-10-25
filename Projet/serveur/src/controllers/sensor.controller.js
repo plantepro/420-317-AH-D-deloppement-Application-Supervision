@@ -1,5 +1,6 @@
 import * as service from "../services/sensor.service.js";
 import * as realtime from "../realtime.js";
+import { subscribeSensor,unsubscribeSensor} from "../mqtt.js";
 
 export async function list(req, res, next) {
   try {
@@ -34,6 +35,7 @@ export async function create(req, res, next) {
     // Appelez subscribeSensor(sensor._id) (a importer depuis ../mqtt.js). Un seul argument :
     // l'identifiant du capteur cree. La fonction ne retourne rien, inutile d'attendre.
     // -----------------------------------------------------------------------
+    subscribeSensor(sensor._id)
 
     res.status(201).json(sensor);
   } catch (error) {
@@ -77,7 +79,7 @@ export async function remove(req, res, next) {
     // enregistree pour lui. Appelez unsubscribeSensor(req.params.id) : un seul argument,
     // l'identifiant du capteur supprime, et rien a attendre.
     // -----------------------------------------------------------------------
-
+    unsubscribeSensor(req.params.id)
     res.status(204).end();
   } catch (error) {
     next(error);
